@@ -1,0 +1,1807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoodHub — Restaurant Discovery Marketplace</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+        /* ==========================================================================
+           Z-INDEX DOCUMENTATION
+           1000: Navbar (Sticky Header)
+           999:  Search & Filter Bar (Sticky)
+           500:  Modal Overlay
+           10:   Modal Header (Sticky inside modal)
+           1:    Standard relative elements (badges, overlays inside cards)
+           ========================================================================== */
+
+        :root {
+            /* Color Palette */
+            --primary: #e85d26;
+            --primary-dark: #d94a14; /* For 4.5:1 contrast on white */
+            --secondary: #1a1a2e;
+            --bg: #ffffff;
+            --surface: #f9f7f4;
+            --border: #ebebeb;
+            --text-primary: #1a1a2e;
+            --text-secondary: #777777;
+            --body-copy: #4a4a4a;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            
+            /* Layout */
+            --nav-height-desktop: 64px;
+            --nav-height-mobile: 56px;
+            --nav-height: var(--nav-height-desktop);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        @media (max-width: 768px) {
+            :root {
+                --nav-height: var(--nav-height-mobile);
+            }
+        }
+
+        /* Reset & Base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-primary);
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
+
+        body.modal-open {
+            overflow: hidden;
+        }
+
+        /* Typography System */
+        .display-heading {
+            font-family: 'Sora', sans-serif;
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 700;
+            line-height: 1.15;
+            letter-spacing: -0.02em;
+        }
+
+        .section-heading {
+            font-family: 'Sora', sans-serif;
+            font-size: clamp(1.4rem, 3vw, 2rem);
+            font-weight: 600;
+            line-height: 1.25;
+        }
+
+        .card-title {
+            font-family: 'Sora', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .body-copy {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9375rem;
+            font-weight: 400;
+            line-height: 1.7;
+            color: var(--body-copy);
+        }
+
+        .label-text {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .btn-text {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+        }
+
+        .price-text {
+            font-family: 'Sora', sans-serif;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+
+        /* Layout Architecture */
+        section {
+            width: 100%;
+            padding: 60px 5%;
+            margin: 0; /* No margin collapse */
+        }
+
+        .bg-white { background-color: var(--bg); }
+        .bg-surface { background-color: var(--surface); }
+
+        /* Buttons */
+        button {
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: #fff;
+        }
+        .btn-primary:hover { background-color: var(--primary-dark); }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 2px solid #fff;
+            color: #fff;
+        }
+        .btn-outline:hover { background-color: rgba(255,255,255,0.1); }
+
+        .btn-whatsapp {
+            background-color: #25D366;
+            color: #fff;
+            width: 100%;
+            gap: 8px;
+        }
+        .btn-whatsapp:hover { background-color: #1da851; }
+
+        /* 1. Navbar */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: var(--nav-height);
+            background-color: var(--bg);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 5%;
+            transition: border-bottom 0.3s ease;
+        }
+        .navbar.scrolled {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            font-family: 'Sora', sans-serif;
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .nav-search {
+            display: none;
+            flex: 1;
+            max-width: 400px;
+            margin: 0 24px;
+            position: relative;
+        }
+        @media (min-width: 1024px) { .nav-search { display: block; } }
+        
+        .nav-search input {
+            width: 100%;
+            padding: 10px 16px 10px 40px;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            background: var(--surface);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+        }
+        .nav-search svg {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            fill: var(--text-secondary);
+        }
+
+        .nav-links {
+            display: none;
+            align-items: center;
+            gap: 24px;
+        }
+        @media (min-width: 768px) { .nav-links { display: flex; } }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 500;
+            font-size: 0.9375rem;
+        }
+        .nav-links .btn-signup {
+            background-color: var(--primary);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 6px;
+        }
+
+        .mobile-menu-btn {
+            display: block;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        @media (min-width: 768px) { .mobile-menu-btn { display: none; } }
+
+        /* Mobile Drawer */
+        .mobile-drawer {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 280px;
+            height: 100vh;
+            background: var(--bg);
+            z-index: 1001;
+            padding: 80px 24px 24px;
+            box-shadow: -4px 0 15px rgba(0,0,0,0.1);
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .mobile-drawer.open { right: 0; }
+        .mobile-drawer a {
+            font-size: 1.1rem;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 500;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .drawer-close {
+            position: absolute;
+            top: 20px;
+            right: 24px;
+            font-size: 2rem;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+        }
+
+        /* 2. Hero Section */
+        .hero {
+            min-height: 540px;
+            padding-top: calc(40px + var(--nav-height));
+            background-color: var(--secondary);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 40px;
+            align-items: center;
+            max-width: 1200px;
+            width: 100%;
+            z-index: 2;
+        }
+        @media (min-width: 1024px) { .hero-container { grid-template-columns: 1.2fr 1fr; } }
+
+        .hero-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .hero h1 { margin-bottom: 0; }
+        .hero p { font-size: 1.125rem; color: #e2e2e2; margin-bottom: 12px; }
+        
+        .hero-ctas {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .hero-image-wrapper {
+            display: none;
+            position: relative;
+        }
+        @media (min-width: 1024px) { .hero-image-wrapper { display: block; } }
+
+        .hero-main-img {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            border: 4px solid rgba(255,255,255,0.1);
+        }
+
+        .hero-floating-card {
+            position: absolute;
+            bottom: -20px;
+            left: -20px;
+            background: #fff;
+            padding: 16px;
+            border-radius: 12px;
+            color: var(--text-primary);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .trust-indicators {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 24px;
+            margin-top: 20px;
+        }
+        .trust-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            color: #ccc;
+        }
+
+        /* 3. Search & Filter Bar */
+        .search-bar-section {
+            position: sticky;
+            top: var(--nav-height);
+            z-index: 999;
+            padding: 20px 5%;
+            border-bottom: 1px solid var(--border);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            background: var(--bg);
+        }
+
+        .search-controls {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        
+        .search-input-group {
+            flex: 1;
+            min-width: 200px;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .search-input-group svg {
+            position: absolute;
+            left: 12px;
+            fill: var(--text-secondary);
+        }
+        .search-input-group input, .search-input-group select {
+            width: 100%;
+            padding: 12px 12px 12px 40px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9375rem;
+            background: var(--bg);
+            outline: none;
+        }
+        .search-input-group select { padding-left: 12px; cursor: pointer; }
+        .search-input-group input:focus, .search-input-group select:focus { border-color: var(--primary); }
+
+        .btn-search {
+            padding: 12px 24px;
+            border-radius: 8px;
+            background: var(--primary);
+            color: #fff;
+            font-weight: 600;
+        }
+
+        /* 4. Category Pills */
+        .category-pills {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            scrollbar-width: none; /* Firefox */
+        }
+        .category-pills::-webkit-scrollbar { display: none; } /* Chrome */
+        
+        .pill {
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            background: var(--bg);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.875rem;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .pill:hover { border-color: var(--primary); color: var(--primary); }
+        .pill.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+        /* 5. Trending Dishes */
+        .trending-header { margin-bottom: 24px; }
+        .trending-row {
+            display: flex;
+            gap: 16px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none;
+            padding-bottom: 16px;
+        }
+        .trending-row::-webkit-scrollbar { display: none; }
+        
+        .dish-card {
+            min-width: 160px;
+            height: 200px;
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            position: relative;
+            scroll-snap-align: start;
+            overflow: hidden;
+            color: #fff;
+            text-decoration: none;
+        }
+        .dish-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            z-index: 1;
+        }
+        .dish-content { position: relative; z-index: 2; }
+        .dish-name { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 1rem; margin-bottom: 4px; }
+        .dish-restaurant { font-family: 'Inter', sans-serif; font-size: 0.75rem; opacity: 0.9; margin-bottom: 8px; }
+        .dish-price { background: var(--primary); padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; display: inline-block; }
+        
+        .dish-hover {
+            position: absolute;
+            inset: 0;
+            background: rgba(232, 93, 38, 0.9);
+            z-index: 3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            font-weight: 600;
+        }
+        .dish-card:hover .dish-hover { opacity: 1; }
+
+        /* 6. Featured Restaurants Grid */
+        .restaurants-header {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+        .result-count { color: var(--text-secondary); font-size: 0.9375rem; }
+
+        .restaurant-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+        @media (min-width: 768px) { .restaurant-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (min-width: 1024px) { .restaurant-grid { grid-template-columns: repeat(3, 1fr); } }
+
+        .restaurant-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .restaurant-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.08);
+        }
+
+        .card-banner {
+            height: 200px;
+            position: relative;
+            padding: 16px;
+        }
+        .badge {
+            position: absolute;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #fff;
+            z-index: 1;
+        }
+        .badge-status { top: 16px; left: 16px; }
+        .badge-status.open { background: var(--success); }
+        .badge-status.closed { background: var(--danger); }
+        .badge-time { top: 16px; right: 16px; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
+        .badge-cuisine { bottom: 16px; left: 16px; background: rgba(255,255,255,0.9); color: var(--text-primary); }
+
+        .card-body {
+            padding: 20px;
+            position: relative;
+            flex: 1;
+        }
+        .card-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--surface);
+            border: 2px solid #fff;
+            position: absolute;
+            top: -24px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: var(--primary);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .card-rating {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 8px 0;
+            font-size: 0.875rem;
+        }
+        .stars { color: var(--warning); letter-spacing: 2px; }
+        
+        .card-desc {
+            margin-bottom: 16px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .card-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .meta-item { display: flex; align-items: center; gap: 8px; }
+        .meta-item svg { fill: var(--text-secondary); width: 16px; height: 16px; }
+
+        .card-footer {
+            padding: 0 20px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .card-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .btn-card {
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+            
+        }
+        .btn-card:hover { background: var(--surface); }
+
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        /* 7. How It Works */
+        .steps-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 32px;
+            margin-top: 40px;
+        }
+        @media (min-width: 768px) { .steps-container { grid-template-columns: repeat(3, 1fr); } }
+        
+        .step-card {
+            text-align: center;
+            padding: 24px;
+        }
+        .step-number {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 0 auto 20px;
+        }
+        .step-card h3 { margin-bottom: 12px; }
+
+        /* 8. Footer */
+        .footer {
+            background: var(--secondary);
+            color: #fff;
+            padding-bottom: 24px;
+        }
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        @media (min-width: 768px) { .footer-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (min-width: 1024px) { .footer-grid { grid-template-columns: 2fr 1fr 1fr 1fr; } }
+        
+        .footer-col h4 {
+            font-family: 'Sora', sans-serif;
+            font-size: 1.125rem;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+        .footer-col p { color: #aaa; margin-bottom: 16px; font-size: 0.9375rem; }
+        .footer-links { list-style: none; }
+        .footer-links li { margin-bottom: 12px; }
+        .footer-links a { color: #aaa; text-decoration: none; transition: color 0.2s; font-size: 0.9375rem; }
+        .footer-links a:hover { color: var(--primary); }
+        
+        .social-icons { display: flex; gap: 16px; margin-top: 20px; }
+        .social-icons a { color: #fff; opacity: 0.7; }
+        .social-icons a:hover { opacity: 1; }
+        .social-icons svg { width: 24px; height: 24px; fill: currentColor; }
+
+        .footer-bottom {
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            color: #aaa;
+            font-size: 0.875rem;
+        }
+        @media (min-width: 768px) {
+            .footer-bottom { flex-direction: row; justify-content: space-between; }
+        }
+
+        /* 9. Modal */
+        .modal {
+        
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.active { display: flex; }
+        
+        .modal-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+        }
+        
+        .modal-content {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            height: 90vh;
+            background: var(--bg);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            margin: 20px;
+            box-shadow: 0 24px 48px rgba(0,0,0,0.2);
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .modal-header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: var(--bg);
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .btn-close {
+            background: var(--surface);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+        }
+        .btn-close:hover { background: var(--border); }
+
+        .modal-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg);
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .modal-tabs::-webkit-scrollbar { display: none; }
+        .tab-btn {
+            padding: 16px 24px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-bottom: 2px solid transparent;
+            white-space: nowrap;
+        }
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+        }
+        .tab-pane { display: none; padding: 24px; }
+        .tab-pane.active { display: block; }
+
+        /* Modal Tab Contents */
+        .overview-banner { height: 180px; border-radius: 12px; margin-bottom: -50px; position: relative; }
+        .overview-header { display: flex; align-items: flex-end; gap: 20px; margin-bottom: 32px; padding: 0 24px; position: relative; z-index: 2; }
+        .overview-logo { width: 90px; height: 90px; border-radius: 50%; background: #fff; border: 4px solid #fff; display: flex; align-items: center; justify-content: center; font-size: 1.75rem; font-weight: 700; color: var(--primary); box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
+        
+        .overview-details-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+            padding: 0 24px 24px;
+        }
+        @media (min-width: 600px) {
+            .overview-details-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        .detail-card {
+            background: var(--surface);
+            padding: 16px;
+            border-radius: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .detail-card svg { fill: var(--primary); width: 24px; height: 24px; flex-shrink: 0; }
+        .detail-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 4px; font-weight: 600; }
+        .detail-value { font-weight: 600; font-size: 0.95rem; }
+
+        /* Review Form */
+        .review-form-container {
+            background: var(--surface);
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 40px;
+        }
+        .review-form-container h4 { margin-bottom: 16px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 8px; }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+        .rating-input {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .star-radio { display: none; }
+        .star-label { cursor: pointer; font-size: 1.5rem; color: var(--border); transition: color 0.2s; }
+        .star-radio:checked ~ .star-label, 
+        .star-label:hover, 
+        .star-label:hover ~ .star-label { color: var(--warning); }
+        /* Reverse for RTL-like hover logic or just use JS */
+
+        .menu-category { margin-bottom: 32px; }
+        .menu-category h3 { margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+        .menu-grid { display: grid; gap: 16px; }
+        @media (min-width: 600px) { .menu-grid { grid-template-columns: repeat(2, 1fr); } }
+        .menu-item { border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; }
+        .menu-item.sold-out { opacity: 0.5; }
+        .menu-item-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+        .menu-item-name { font-weight: 600; font-family: 'Sora', sans-serif; }
+        .menu-item-desc { font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 12px; }
+        .menu-item-footer { display: flex; justify-content: space-between; align-items: center; }
+        .badge-soldout { background: var(--danger); color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+
+        .reviews-summary { display: flex; align-items: center; gap: 32px; margin-bottom: 32px; flex-wrap: wrap; }
+        .rating-large { font-size: 3rem; font-weight: 700; font-family: 'Sora', sans-serif; line-height: 1; }
+        .rating-bars { flex: 1; min-width: 200px; }
+        .rating-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-size: 0.875rem; }
+        .bar-bg { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+        .bar-fill { height: 100%; background: var(--warning); }
+        
+        .top-dishes { margin-bottom: 32px; }
+        .top-dishes h4 { margin-bottom: 16px; }
+        .dish-rating-pill { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: var(--surface); border-radius: 20px; margin: 0 8px 8px 0; font-size: 0.875rem; font-weight: 500; }
+        
+        .review-card { border-bottom: 1px solid var(--border); padding: 20px 0; }
+        .review-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .reviewer-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 600; }
+        .review-meta { flex: 1; }
+        .review-date { font-size: 0.75rem; color: var(--text-secondary); }
+        .review-dish-tag { display: inline-block; padding: 2px 8px; background: var(--surface); border-radius: 4px; font-size: 0.75rem; margin-bottom: 8px; color: var(--text-secondary); }
+
+        .staff-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 24px; }
+        .staff-card { text-align: center; padding: 24px; border: 1px solid var(--border); border-radius: 12px; }
+        .staff-avatar { width: 80px; height: 80px; border-radius: 50%; background: var(--surface); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700; margin: 0 auto 16px; }
+        .staff-role { color: var(--primary); font-size: 0.875rem; font-weight: 500; margin-bottom: 4px; }
+        .staff-exp { font-size: 0.875rem; color: var(--text-secondary); }
+
+    </style>
+</head>
+<body>
+
+    <!-- 1. STICKY HEADER / NAVBAR -->
+    <header class="navbar" id="navbar">
+        <a href="#hero" class="logo" style="display: flex; align-items: center;">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" style="margin-right: 8px;"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>
+            FoodHub
+        </a>
+        
+        <div class="nav-search">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            <input type="text" placeholder="Search restaurants, dishes..." id="nav-search-input">
+        </div>
+
+        <nav class="nav-links">
+            <a href="#restaurants">Explore</a>
+            <a href="#search">Near Me</a>
+            <!-- <a href="#">Log In</a>
+            <a href="#" class="btn-signup">Sign Up</a> -->
+        </nav>
+
+        <button class="mobile-menu-btn" id="mobile-menu-btn">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="var(--text-primary)"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+        </button>
+    </header>
+
+    <div class="mobile-drawer" id="mobile-drawer">
+        <button class="drawer-close" id="drawer-close">&times;</button>
+        <a href="#restaurants" class="drawer-link">Explore</a>
+        <a href="#search" class="drawer-link">Near Me</a>
+        <a href="#footer" class="drawer-link">Log In</a>
+        <a href="#footer" class="drawer-link" style="color: var(--primary);">Sign Up</a>
+    </div>
+
+    <!-- 2. HERO SECTION -->
+    <section class="hero" id="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1 class="display-heading">Discover the Best Restaurants Around You</h1>
+                <p>Order your favourite Nigerian dishes — delivered or pick up. Pay on delivery.</p>
+                
+                <div class="hero-ctas">
+                    <a href="#search" class="btn btn-primary btn-text">Find Restaurants</a>
+                    <a href="#how-it-works" class="btn btn-outline btn-text">How It Works</a>
+                </div>
+
+                <div class="trust-indicators">
+                    <div class="trust-item">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                        500+ Restaurants
+                    </div>
+                    <div class="trust-item">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 9h-2V7h-2v5H6v-2H4v6h16v-6h-2v2h-2v-5h-2v5z"/></svg>
+                        50,000+ Orders
+                    </div>
+                    <div class="trust-item">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--warning)"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                        4.8 Average Rating
+                    </div>
+                </div>
+            </div>
+            <div class="hero-image-wrapper">
+                <img src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=1200&q=80" alt="Delicious Nigerian Food" class="hero-main-img">
+                <!-- <div class="hero-floating-card">
+                    <div style="background: var(--primary); color: #fff; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    </div>
+                    <div>
+                        <div style="font-weight: 700; font-size: 0.9rem;">Fast Delivery</div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary);">Average 25 mins</div>
+                    </div>
+                </div> -->
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. SEARCH & FILTER BAR -->
+    <section class="search-bar-section bg-white" id="search">
+        <div class="search-controls">
+            <div class="search-input-group">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                <input type="text" placeholder="Enter your area or street...">
+            </div>
+            <div class="search-input-group">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                <input type="text" id="main-search" placeholder="Search food or restaurant...">
+            </div>
+            <div class="search-input-group" style="flex: 0.5; min-width: 150px;">
+                <select id="category-select">
+                    <option value="All">Category: All</option>
+                    <option value="Rice Dishes">Rice Dishes</option>
+                    <option value="Soups">Soups</option>
+                    <option value="Grills">Grills</option>
+                    <option value="Snacks">Snacks</option>
+                    <option value="Drinks">Drinks</option>
+                    <option value="Desserts">Desserts</option>
+                </select>
+            </div>
+            <div class="search-input-group" style="flex: 0.5; min-width: 150px;">
+                <select id="sort-select">
+                    <option value="Nearest">Sort By: Nearest</option>
+                    <option value="Top Rated">Top Rated</option>
+                    <option value="Fastest">Fastest</option>
+                    <option value="Trending Today">Trending Today</option>
+                </select>
+            </div>
+            <button class="btn btn-search btn-text" id="btn-search-action">Search</button>
+        </div>
+
+        <!-- 4. CATEGORY PILLS -->
+        <div class="category-pills" id="filter-pills">
+            <button class="pill active" data-filter="All">All</button>
+            <button class="pill" data-filter="Open Now">Open Now</button>
+            <button class="pill" data-filter="Top Rated">Top Rated</button>
+            <button class="pill" data-filter="Free Delivery">Free Delivery</button>
+            <button class="pill" data-filter="Under ₦2000">Under ₦2000</button>
+            <button class="pill" data-filter="Jollof Rice">Jollof Rice</button>
+            <button class="pill" data-filter="Suya">Suya</button>
+            <button class="pill" data-filter="Peppered Fish">Peppered Fish</button>
+            <button class="pill" data-filter="Amala">Amala</button>
+            <button class="pill" data-filter="Pounded Yam">Pounded Yam</button>
+            <button class="pill" data-filter="Fried Rice">Fried Rice</button>
+        </div>
+    </section>
+
+    <!-- 5. TRENDING DISHES SECTION -->
+    <section class="trending-section bg-surface" id="trending">
+        <h2 class="section-heading trending-header">Trending This Week 🔥</h2>
+        <div class="trending-row" id="trending-container">
+            <!-- Injected via JS -->
+        </div>
+    </section>
+
+    <!-- 6. FEATURED RESTAURANTS GRID -->
+    <section class="restaurants-section bg-white" id="restaurants">
+        <div class="restaurants-header">
+            <h2 class="section-heading">Restaurants Near You</h2>
+            <span class="result-count" id="result-count">(Showing 6 of 6)</span>
+        </div>
+        <div class="restaurant-grid" id="restaurant-grid">
+            <!-- Injected via JS -->
+        </div>
+    </section>
+
+    <!-- 7. HOW IT WORKS SECTION -->
+    <section class="how-it-works bg-surface" id="how-it-works">
+        <h2 class="section-heading" style="text-align: center;">How It Works</h2>
+        <div class="steps-container">
+            <div class="step-card">
+                <div class="step-number">1</div>
+                <h3 class="card-title">Search & Discover</h3>
+                <p class="body-copy">Browse hundreds of restaurants by location, cuisine, or dish name.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">2</div>
+                <h3 class="card-title">Choose & Customise</h3>
+                <p class="body-copy">View full menus, check reviews, and pick your favourite dishes.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">3</div>
+                <h3 class="card-title">Order via WhatsApp</h3>
+                <p class="body-copy">Tap Order Now and connect directly with the restaurant on WhatsApp.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 8. FOOTER -->
+    <footer class="footer" id="footer">
+        <section style="padding-bottom: 0;">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <a href="#hero" class="logo" style="color: #fff; display: inline-block; margin-bottom: 16px;">FoodHub</a>
+                    <p>Your ultimate destination for discovering and ordering the best local food.</p>
+                    <div class="social-icons">
+                        <a href="#"><svg viewBox="0 0 24 24"><path d="M7.8 2h8.4C19.4 2 22 4.6 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8C4.6 22 2 19.4 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2m-.2 2A3.6 3.6 0 0 0 4 7.6v8.8C4 18.39 5.61 20 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6C20 5.61 18.39 4 16.4 4H7.6m9.65 1.5a1.25 1.25 0 0 1 1.25 1.25A1.25 1.25 0 0 1 17.25 8 1.25 1.25 0 0 1 16 6.75a1.25 1.25 0 0 1 1.25-1.25M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/></svg></a>
+                        <a href="#"><svg viewBox="0 0 24 24"><path d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.05c0 2.08 1.48 3.82 3.44 4.21a4.22 4.22 0 0 1-1.93.07 4.28 4.28 0 0 0 4 2.98 8.521 8.521 0 0 1-5.33 1.84c-.34 0-.68-.02-1.02-.06C3.44 20.29 5.7 21 8.12 21 16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23z"/></svg></a>
+                        <a href="#"><svg viewBox="0 0 24 24"><path d="M12 2.04C6.5 2.04 2 6.53 2 12.06C2 17.06 5.66 21.21 10.44 21.96V14.96H7.9V12.06H10.44V9.85C10.44 7.34 11.93 5.96 14.22 5.96C15.31 5.96 16.45 6.15 16.45 6.15V8.62H15.19C13.95 8.62 13.56 9.39 13.56 10.18V12.06H16.34L15.89 14.96H13.56V21.96A10 10 0 0 0 22 12.06C22 6.53 17.5 2.04 12 2.04Z"/></svg></a>
+                    </div>
+                </div>
+                <div class="footer-col">
+                    <h4>Discover</h4>
+                    <ul class="footer-links">
+                        <li><a href="#restaurants">Browse Restaurants</a></li>
+                        <li><a href="#trending">Trending Dishes</a></li>
+                        <li><a href="#search">Near Me</a></li>
+                        <li><a href="#restaurants">Top Rated</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>For Restaurants</h4>
+                    <ul class="footer-links">
+                        <li><a href="#footer">List Your Restaurant</a></li>
+                        <li><a href="#footer">Login to Dashboard</a></li>
+                        <li><a href="#footer">Help Center</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Contact</h4>
+                    <ul class="footer-links">
+                        <li><a href="https://wa.me/2348012345678" target="_blank">WhatsApp Support</a></li>
+                        <li><a href="mailto:hello@foodhub.ng">hello@foodhub.ng</a></li>
+                        <li><a href="https://maps.google.com/?q=14+Admiralty+Way+Lekki+Lagos" target="_blank">14 Admiralty Way, Lekki, Lagos</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 FoodHub · All rights reserved</p>
+                <p>Privacy Policy · Terms of Service</p>
+            </div>
+        </section>
+    </footer>
+
+    <!-- 9. RESTAURANT MODAL (FULL PROFILE) -->
+    <div class="modal" id="restaurant-modal">
+        <div class="modal-backdrop" id="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="section-heading" id="modal-title" style="font-size: 1.5rem;">Restaurant Name</h2>
+                <button class="btn-close" id="modal-close">&times;</button>
+            </div>
+            
+            <div class="modal-tabs">
+                <button class="tab-btn active" data-tab="overview">Overview</button>
+                <button class="tab-btn" data-tab="menu">Menu</button>
+                <button class="tab-btn" data-tab="reviews">Reviews</button>
+                <button class="tab-btn" data-tab="staff">Staff</button>
+            </div>
+
+            <div class="modal-body">
+                <!-- TAB 1: OVERVIEW -->
+                <div class="tab-pane active" id="pane-overview">
+                    <div class="overview-banner" id="modal-banner"></div>
+                    <div class="overview-header">
+                        <div class="overview-logo" id="modal-logo">MC</div>
+                        <div>
+                            <h3 class="card-title" id="modal-tagline" style="font-size: 1.25rem; margin-bottom: 4px;">Tagline</h3>
+                            <span class="label-text" id="modal-cuisines">Cuisines</span>
+                        </div>
+                    </div>
+                    
+                    <div class="overview-details-grid">
+                        <div class="detail-card">
+                            <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                            <div>
+                                <div class="detail-label">Location</div>
+                                <div class="detail-value" id="modal-address">Address</div>
+                            </div>
+                        </div>
+                        <div class="detail-card">
+                            <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                            <div>
+                                <div class="detail-label">Opening Hours</div>
+                                <div class="detail-value" id="modal-hours">Hours</div>
+                            </div>
+                        </div>
+                        <div class="detail-card">
+                            <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM9 11H7V9h2v2zm4 0h-2V9h2v2zm4 0h-2V9h2v2z"/></svg>
+                            <div>
+                                <div class="detail-label">Response Time</div>
+                                <div class="detail-value" id="modal-response">Quick</div>
+                            </div>
+                        </div>
+                        <div class="detail-card">
+                            <svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+                            <div>
+                                <div class="detail-label">Delivery Info</div>
+                                <div class="detail-value" id="modal-delivery">Fee</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="padding: 0 24px 24px;">
+                        <a href="#" class="btn btn-whatsapp btn-text" id="modal-whatsapp-btn" target="_blank">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                            Chat Now on WhatsApp
+                        </a>
+                    </div>
+                </div>
+
+                <!-- TAB 2: MENU -->
+                <div class="tab-pane" id="pane-menu">
+                    <div id="modal-menu-container"></div>
+                </div>
+
+                <!-- TAB 3: REVIEWS -->
+                <div class="tab-pane" id="pane-reviews">
+                    <!-- New Review Form -->
+                    <div class="review-form-container">
+                        <h4 class="card-title">Leave a Review</h4>
+                        <form id="review-form">
+                            <div class="form-group">
+                                <label>Your Rating</label>
+                                <div class="rating-input">
+                                    <input type="radio" name="rating" value="5" id="r5" class="star-radio" checked><label for="r5" class="star-label">★</label>
+                                    <input type="radio" name="rating" value="4" id="r4" class="star-radio"><label for="r4" class="star-label">★</label>
+                                    <input type="radio" name="rating" value="3" id="r3" class="star-radio"><label for="r3" class="star-label">★</label>
+                                    <input type="radio" name="rating" value="2" id="r2" class="star-radio"><label for="r2" class="star-label">★</label>
+                                    <input type="radio" name="rating" value="1" id="r1" class="star-radio"><label for="r1" class="star-label">★</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>What did you order?</label>
+                                <input type="text" id="review-dish" placeholder="e.g. Party Jollof Rice" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Your Comment</label>
+                                <textarea id="review-comment" rows="3" placeholder="Tell us about your experience..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-text" style="width: 100%;">Post Review</button>
+                        </form>
+                    </div>
+
+                    <div class="reviews-summary">
+                        <div style="text-align: center;">
+                            <div class="rating-large" id="modal-rating-large">4.7</div>
+                            <div class="stars" id="modal-rating-stars" style="font-size: 1.25rem; margin: 8px 0;">★★★★★</div>
+                            <div class="label-text" id="modal-review-count">238 reviews</div>
+                        </div>
+                        <div class="rating-bars" id="modal-rating-bars">
+                            <!-- Injected via JS -->
+                        </div>
+                    </div>
+                    
+                    <div class="top-dishes">
+                        <h4 class="card-title">Best dishes at this restaurant</h4>
+                        <div id="modal-dish-ratings"></div>
+                    </div>
+
+                    <div>
+                        <h4 class="card-title" style="margin-bottom: 16px;">Customer Reviews</h4>
+                        <div id="modal-reviews-list"></div>
+                    </div>
+                </div>
+
+                <!-- TAB 4: STAFF -->
+                <div class="tab-pane" id="pane-staff">
+                    <div class="staff-grid" id="modal-staff-grid"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // --- DATA ---
+        const restaurants =[
+            {
+                id: 1,
+                name: "Mama Cass Kitchen",
+                tagline: "Authentic Nigerian home cooking",
+                cuisines:["Nigerian", "Continental"],
+                isOpen: true,
+                rating: 4.7,
+                reviewCount: 238,
+                responseTime: "Replies within 5 min",
+                deliveryTime: "20–30 min",
+                deliveryFee: "Free delivery",
+                minOrder: 1500,
+                address: "14 Admiralty Way, Lekki Phase 1, Lagos",
+                whatsapp: "2348012345678",
+                hours: "Mon–Sat: 8am–10pm, Sun: 10am–8pm",
+                image: "https://images.unsplash.com/photo-1534353436294-0dbd4bdac845?auto=format&fit=crop&w=800&q=80",
+                gradient: "linear-gradient(135deg, #e85d26 0%, #ff9a3c 100%)",
+                menu:[
+                    { category: "Main Course", name: "Party Jollof Rice", desc: "Smoky party-style jollof with fried chicken", price: 2500, available: true },
+                    { category: "Main Course", name: "Egusi Soup + Eba", desc: "Rich egusi with stockfish and ponmo", price: 2000, available: true },
+                    { category: "Soups", name: "Pepper Soup", desc: "Catfish pepper soup with utazi leaves", price: 3500, available: false },
+                    { category: "Drinks", name: "Zobo Drink (1L)", desc: "Chilled hibiscus drink, lightly spiced", price: 800, available: true }
+                ],
+                reviews:[
+                    { reviewer: "Chidi O.", date: "2 days ago", rating: 5, dish: "Jollof Rice", comment: "Best jollof in Lagos no cap! Smoky, well seasoned, and the portions are generous. Will definitely order again." },
+                    { reviewer: "Amaka B.", date: "1 week ago", rating: 4, dish: "Egusi Soup", comment: "The egusi was rich and tasty. Delivery was a bit slow but the food made up for it." }
+                ],
+                staff:[
+                    { name: "Blessing Okafor", role: "Head Chef", experience: "8 years", initials: "BO" },
+                    { name: "Emeka Nwosu", role: "Sous Chef", experience: "5 years", initials: "EN" },
+                    { name: "Ngozi Adeyemi", role: "Customer Service", experience: "3 years", initials: "NA" }
+                ],
+                dishRatings:[
+                    { dish: "Jollof Rice", rating: 4.9, reviews: 120 },
+                    { dish: "Egusi Soup", rating: 4.6, reviews: 87 },
+                    { dish: "Pepper Soup", rating: 4.4, reviews: 31 }
+                ]
+            },
+            {
+                id: 2,
+                name: "Suya Spot Express",
+                tagline: "Premium grilled meats and spices",
+                cuisines: ["Grills", "Snacks"],
+                isOpen: true,
+                rating: 4.8,
+                reviewCount: 412,
+                responseTime: "Replies within 2 min",
+                deliveryTime: "15–25 min",
+                deliveryFee: "₦500 delivery",
+                minOrder: 2000,
+                address: "Allen Avenue, Ikeja, Lagos",
+                whatsapp: "2348023456789",
+                hours: "Mon–Sun: 4pm–12am",
+                image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=800&q=80",
+                gradient: "linear-gradient(135deg, #8b0000 0%, #e85d26 100%)",
+                menu:[
+                    { category: "Grills", name: "Beef Suya Portion", desc: "Spicy grilled beef with fresh onions and tomatoes", price: 2000, available: true },
+                    { category: "Grills", name: "Chicken Suya", desc: "Quarter chicken grilled with yaji spice", price: 3500, available: true },
+                    { category: "Snacks", name: "Masa (3 pcs)", desc: "Northern rice cakes, perfect with suya", price: 1000, available: true },
+                    { category: "Drinks", name: "Chilled Coke", desc: "50cl PET bottle", price: 500, available: true }
+                ],
+                reviews:[
+                    { reviewer: "Tunde M.", date: "1 day ago", rating: 5, dish: "Beef Suya Portion", comment: "The spice level is perfect. Meat is tender." },
+                    { reviewer: "Sarah J.", date: "3 days ago", rating: 5, dish: "Chicken Suya", comment: "Always fresh and hot. My go-to spot." }
+                ],
+                staff:[
+                    { name: "Musa Ibrahim", role: "Master Griller", experience: "12 years", initials: "MI" },
+                    { name: "Aisha Bello", role: "Manager", experience: "4 years", initials: "AB" }
+                ],
+                dishRatings:[
+                    { dish: "Beef Suya Portion", rating: 4.9, reviews: 250 },
+                    { dish: "Chicken Suya", rating: 4.8, reviews: 142 }
+                ]
+            },
+            {
+                id: 3,
+                name: "Wok & Roll",
+                tagline: "Asian fusion meets Lagos flavor",
+                cuisines: ["Chinese", "Rice Dishes"],
+                isOpen: false,
+                rating: 4.5,
+                reviewCount: 156,
+                responseTime: "Replies within 10 min",
+                deliveryTime: "35–45 min",
+                deliveryFee: "Free delivery",
+                minOrder: 4000,
+                address: "Victoria Island, Lagos",
+                whatsapp: "2348034567890",
+                hours: "Tue–Sun: 11am–9pm",
+                image: "https://images.unsplash.com/photo-1512058560566-427a1bd5a5cf?auto=format&fit=crop&w=800&q=80",
+                gradient: "linear-gradient(135deg, #1a1a2e 0%, #4a4a6a 100%)",
+                menu:[
+                    { category: "Rice Dishes", name: "Special Fried Rice", desc: "Shrimp, chicken, and veggies", price: 4500, available: true },
+                    { category: "Main Course", name: "Shredded Beef in Green Pepper", desc: "Savory beef stir-fry", price: 5000, available: true },
+                    { category: "Snacks", name: "Spring Rolls (4 pcs)", desc: "Crispy vegetable rolls", price: 2000, available: false }
+                ],
+                reviews:[
+                    { reviewer: "Femi K.", date: "2 weeks ago", rating: 4, dish: "Special Fried Rice", comment: "Good portion size, tasty but a bit oily." }
+                ],
+                staff:[
+                    { name: "Chen Wei", role: "Head Chef", experience: "15 years", initials: "CW" }
+                ],
+                dishRatings:[
+                    { dish: "Special Fried Rice", rating: 4.6, reviews: 89 },
+                    { dish: "Shredded Beef", rating: 4.5, reviews: 67 }
+                ]
+            },
+            {
+                id: 4,
+                name: "Burger Boyz",
+                tagline: "Juicy, messy, perfect burgers",
+                cuisines:["Fast Food", "Snacks"],
+                isOpen: true,
+                rating: 4.6,
+                reviewCount: 320,
+                responseTime: "Replies within 1 min",
+                deliveryTime: "15–20 min",
+                deliveryFee: "₦1000 delivery",
+                minOrder: 3000,
+                address: "Surulere, Lagos",
+                whatsapp: "2348045678901",
+                hours: "Mon–Sun: 10am–11pm",
+                image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80",
+                gradient: "linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)",
+                menu:[
+                    { category: "Main Course", name: "Classic Smash Burger", desc: "Double beef patty, cheese, house sauce", price: 4000, available: true },
+                    { category: "Snacks", name: "Loaded Fries", desc: "Fries topped with cheese and bacon bits", price: 2500, available: true },
+                    { category: "Drinks", name: "Oreo Milkshake", desc: "Thick and creamy", price: 3000, available: true }
+                ],
+                reviews:[
+                    { reviewer: "David O.", date: "5 days ago", rating: 5, dish: "Classic Smash Burger", comment: "Best burger on the mainland!" }
+                ],
+                staff:[
+                    { name: "John Doe", role: "Grill Cook", experience: "3 years", initials: "JD" }
+                ],
+                dishRatings:[
+                    { dish: "Classic Smash Burger", rating: 4.8, reviews: 210 },
+                    { dish: "Loaded Fries", rating: 4.5, reviews: 110 }
+                ]
+            },
+            {
+                id: 5,
+                name: "Sweet Treats Cafe",
+                tagline: "Fresh pastries and artisan coffee",
+                cuisines: ["Desserts", "Drinks"],
+                isOpen: true,
+                rating: 4.9,
+                reviewCount: 185,
+                responseTime: "Replies within 5 min",
+                deliveryTime: "20–30 min",
+                deliveryFee: "Free delivery",
+                minOrder: 1000,
+                address: "Yaba, Lagos",
+                whatsapp: "2348056789012",
+                hours: "Mon–Sat: 7am–7pm",
+                image: "https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=800&q=80",
+                gradient: "linear-gradient(135deg, #ec4899 0%, #f472b6 100%)",
+                menu:[
+                    { category: "Desserts", name: "Red Velvet Slice", desc: "Moist cake with cream cheese frosting", price: 2500, available: true },
+                    { category: "Desserts", name: "Meat Pie", desc: "Flaky pastry filled with minced meat", price: 1000, available: true },
+                    { category: "Drinks", name: "Iced Caramel Macchiato", desc: "Espresso, milk, vanilla, caramel", price: 2800, available: false }
+                ],
+                reviews:[
+                    { reviewer: "Grace T.", date: "1 month ago", rating: 5, dish: "Red Velvet Slice", comment: "So soft and not too sweet. Perfect." }
+                ],
+                staff:[
+                    { name: "Tolu A.", role: "Head Baker", experience: "6 years", initials: "TA" }
+                ],
+                dishRatings:[
+                    { dish: "Red Velvet Slice", rating: 4.9, reviews: 95 },
+                    { dish: "Meat Pie", rating: 4.8, reviews: 90 }
+                ]
+            },
+            {
+                id: 6,
+                name: "Iya Basira Amala",
+                tagline: "The true taste of local Amala",
+                cuisines: ["Nigerian", "Soups"],
+                isOpen: true,
+                rating: 4.4,
+                reviewCount: 560,
+                responseTime: "Replies within 15 min",
+                deliveryTime: "30–45 min",
+                deliveryFee: "₦800 delivery",
+                minOrder: 1500,
+                address: "Obalende, Lagos",
+                whatsapp: "2348067890123",
+                hours: "Mon–Sun: 12pm–8pm",
+                image: "https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?auto=format&fit=crop&w=800&q=80",
+                gradient: "linear-gradient(135deg, #4a4a4a 0%, #777777 100%)",
+                menu:[
+                    { category: "Main Course", name: "Amala + Ewedu + Gbegiri", desc: "Classic abula with assorted meat", price: 2500, available: true },
+                    { category: "Main Course", name: "Pounded Yam + Egusi", desc: "Smooth pounded yam", price: 3000, available: true },
+                    { category: "Soups", name: "Extra Assorted Meat", desc: "Shaki, ponmo, beef", price: 1500, available: true }
+                ],
+                reviews:[
+                    { reviewer: "Kunle B.", date: "3 days ago", rating: 4, dish: "Amala + Ewedu", comment: "The amala is smooth, but the queue is always long. Glad they deliver now." }
+                ],
+                staff:[
+                    { name: "Iya Basira", role: "Owner/Chef", experience: "25 years", initials: "IB" }
+                ],
+                dishRatings:[
+                    { dish: "Amala + Ewedu", rating: 4.7, reviews: 320 },
+                    { dish: "Pounded Yam", rating: 4.3, reviews: 140 }
+                ]
+            }
+        ];
+
+        const trendingDishes =[
+            { name: "Party Jollof Rice", restaurant: "Mama Cass Kitchen", price: "₦2,500", image: "https://images.unsplash.com/photo-1534353436294-0dbd4bdac845?auto=format&fit=crop&w=400&q=80" },
+            { name: "Beef Suya Portion", restaurant: "Suya Spot Express", price: "₦2,000", image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=400&q=80" },
+            { name: "Amala + Ewedu", restaurant: "Iya Basira Amala", price: "₦2,500", image: "https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?auto=format&fit=crop&w=400&q=80" },
+            { name: "Classic Smash Burger", restaurant: "Burger Boyz", price: "₦4,000", image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=400&q=80" },
+            { name: "Red Velvet Slice", restaurant: "Sweet Treats Cafe", price: "₦2,500", image: "https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=400&q=80" },
+            { name: "Special Fried Rice", restaurant: "Wok & Roll", price: "₦4,500", image: "https://images.unsplash.com/photo-1512058560566-427a1bd5a5cf?auto=format&fit=crop&w=400&q=80" }
+        ];
+
+        // --- STATE ---
+        let currentRestaurantId = null;
+        let filters = {
+            query: '',
+            category: 'All',
+            pill: 'All',
+            sort: 'Nearest'
+        };
+
+        // --- DOM ELEMENTS ---
+        const grid = document.getElementById('restaurant-grid');
+        const resultCount = document.getElementById('result-count');
+        const searchInput = document.getElementById('main-search');
+        const navSearchInput = document.getElementById('nav-search-input');
+        const categorySelect = document.getElementById('category-select');
+        const sortSelect = document.getElementById('sort-select');
+        const pills = document.querySelectorAll('.pill');
+        const trendingContainer = document.getElementById('trending-container');
+        const btnSearchAction = document.getElementById('btn-search-action');
+
+        // --- UTILS ---
+        function getStarsHTML(rating) {
+            const full = Math.floor(rating);
+            const empty = 5 - full;
+            return '★'.repeat(full) + '☆'.repeat(empty);
+        }
+
+        function formatPrice(price) {
+            return `₦${price.toLocaleString()}`;
+        }
+
+        // --- RENDER FUNCTIONS ---
+        function renderTrending() {
+            trendingContainer.innerHTML = trendingDishes.map(dish => `
+                <a href="#restaurants" class="dish-card" style="background-image: url('${dish.image}'); background-size: cover; background-position: center;">
+                    <div class="dish-content">
+                        <div class="dish-name">${dish.name}</div>
+                        <div class="dish-restaurant">${dish.restaurant}</div>
+                        <div class="dish-price">${dish.price}</div>
+                    </div>
+                    <div class="dish-hover">Order Now</div>
+                </a>
+            `).join('');
+        }
+
+        function renderRestaurants(data) {
+            if (data.length === 0) {
+                grid.innerHTML = `<div class="empty-state"><h3 class="section-heading">No restaurants found.</h3><p class="body-copy">Try adjusting your search or filters.</p></div>`;
+                resultCount.textContent = `(Showing 0 of ${restaurants.length})`;
+                return;
+            }
+
+            grid.innerHTML = data.map(r => {
+                const waText = encodeURIComponent(`Hi, I'd like to order from ${r.name}`);
+                const waLink = `https://wa.me/${r.whatsapp}?text=${waText}`;
+                
+                return `
+                <div class="restaurant-card">
+                    <div class="card-banner" style="background-image: url('${r.image}'); background-size: cover; background-position: center;">
+                        <div class="badge badge-status ${r.isOpen ? 'open' : 'closed'}">${r.isOpen ? 'Open Now' : 'Closed'}</div>
+                        <div class="badge badge-time">${r.deliveryTime}</div>
+                        <div class="badge badge-cuisine">${r.cuisines.join(' · ')}</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-logo">${r.name.substring(0,2).toUpperCase()}</div>
+                        <h3 class="card-title">${r.name}</h3>
+                        <div class="card-rating">
+                            <span class="stars">${getStarsHTML(r.rating)}</span>
+                            <span style="font-weight: 600;">${r.rating}</span>
+                            <span class="label-text">(${r.reviewCount} reviews)</span>
+                        </div>
+                        <p class="body-copy card-desc">${r.tagline}</p>
+                        <div class="card-meta">
+                            <div class="meta-item">
+                                <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                                <span class="label-text">${r.responseTime}</span>
+                            </div>
+                            <div class="meta-item">
+                                <svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+                                <span class="label-text">${r.deliveryFee} · Min order ${formatPrice(r.minOrder)}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="card-actions">
+                            <button class="btn-card" onclick="openModal(${r.id}, 'menu')">View Menu</button>
+                            <button class="btn-card" onclick="openModal(${r.id}, 'reviews')">Reviews</button>
+                        </div>
+                        <a href="${waLink}" target="_blank" class="btn btn-whatsapp btn-text">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                            Order on WhatsApp
+                        </a>
+                    </div>
+                </div>
+                `;
+            }).join('');
+
+            resultCount.textContent = `(Showing ${data.length} of ${restaurants.length})`;
+        }
+
+        // --- FILTER LOGIC ---
+        function applyFilters() {
+            let filtered = restaurants.filter(r => {
+                // Query
+                const q = filters.query.toLowerCase();
+                const matchesQuery = r.name.toLowerCase().includes(q) || 
+                                     r.cuisines.some(c => c.toLowerCase().includes(q)) ||
+                                     r.menu.some(m => m.name.toLowerCase().includes(q));
+                
+                // Category Dropdown
+                const cat = filters.category;
+                const matchesCat = cat === 'All' || r.cuisines.includes(cat) || r.menu.some(m => m.category === cat);
+
+                // Pills
+                let matchesPill = true;
+                const pill = filters.pill;
+                if (pill === 'Open Now') matchesPill = r.isOpen;
+                else if (pill === 'Free Delivery') matchesPill = r.deliveryFee.toLowerCase().includes('free');
+                else if (pill === 'Under ₦2000') matchesPill = r.minOrder < 2000 || r.menu.some(m => m.price < 2000);
+                else if (pill !== 'All' && pill !== 'Top Rated') {
+                    matchesPill = r.menu.some(m => m.name.toLowerCase().includes(pill.toLowerCase())) ||
+                                  r.cuisines.some(c => c.toLowerCase().includes(pill.toLowerCase()));
+                }
+
+                return matchesQuery && matchesCat && matchesPill;
+            });
+
+            // Sorting
+            const sort = filters.sort;
+            if (sort === 'Top Rated' || filters.pill === 'Top Rated') {
+                filtered.sort((a, b) => b.rating - a.rating);
+            } else if (sort === 'Fastest') {
+                filtered.sort((a, b) => parseInt(a.deliveryTime) - parseInt(b.deliveryTime));
+            } else if (sort === 'Trending Today') {
+                filtered.sort((a, b) => b.reviewCount - a.reviewCount);
+            }
+
+            renderRestaurants(filtered);
+        }
+
+        // --- EVENT LISTENERS ---
+        searchInput.addEventListener('input', (e) => { filters.query = e.target.value; applyFilters(); });
+        navSearchInput.addEventListener('input', (e) => { filters.query = e.target.value; searchInput.value = e.target.value; applyFilters(); });
+        categorySelect.addEventListener('change', (e) => { filters.category = e.target.value; applyFilters(); });
+        sortSelect.addEventListener('change', (e) => { filters.sort = e.target.value; applyFilters(); });
+        btnSearchAction.addEventListener('click', () => { applyFilters(); document.getElementById('restaurants').scrollIntoView({ behavior: 'smooth' }); });
+
+        pills.forEach(pill => {
+            pill.addEventListener('click', (e) => {
+                pills.forEach(p => p.classList.remove('active'));
+                e.target.classList.add('active');
+                filters.pill = e.target.dataset.filter;
+                applyFilters();
+            });
+        });
+
+        // Navbar scroll effect
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if (window.scrollY > 10) nav.classList.add('scrolled');
+            else nav.classList.remove('scrolled');
+        });
+
+        // Mobile Menu
+        const mobileBtn = document.getElementById('mobile-menu-btn');
+        const drawer = document.getElementById('mobile-drawer');
+        const drawerClose = document.getElementById('drawer-close');
+        const drawerLinks = document.querySelectorAll('.drawer-link');
+
+        mobileBtn.addEventListener('click', () => drawer.classList.add('open'));
+        drawerClose.addEventListener('click', () => drawer.classList.remove('open'));
+        drawerLinks.forEach(link => link.addEventListener('click', () => drawer.classList.remove('open')));
+
+        // --- MODAL LOGIC ---
+        const modal = document.getElementById('restaurant-modal');
+        const modalClose = document.getElementById('modal-close');
+        const modalBackdrop = document.getElementById('modal-backdrop');
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabPanes = document.querySelectorAll('.tab-pane');
+        const reviewForm = document.getElementById('review-form');
+
+        function renderReviewsList(reviews) {
+            document.getElementById('modal-reviews-list').innerHTML = reviews.map(rev => `
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer-avatar">${rev.reviewer.substring(0,1)}</div>
+                        <div class="review-meta">
+                            <div style="font-weight: 600; font-size: 0.9375rem;">${rev.reviewer}</div>
+                            <div class="review-date">${rev.date}</div>
+                        </div>
+                        <div style="color: var(--warning); font-size: 0.875rem;">${getStarsHTML(rev.rating)}</div>
+                    </div>
+                    <div class="review-dish-tag">Ordered: ${rev.dish}</div>
+                    <p class="body-copy">${rev.comment}</p>
+                </div>
+            `).reverse().join('');
+        }
+
+        function openModal(id, defaultTab = 'overview') {
+            const r = restaurants.find(res => res.id === id);
+            if (!r) return;
+
+            currentRestaurantId = id;
+
+            // Populate Overview
+            document.getElementById('modal-title').textContent = r.name;
+            document.getElementById('modal-banner').style.backgroundImage = `url('${r.image}')`;
+            document.getElementById('modal-banner').style.backgroundSize = 'cover';
+            document.getElementById('modal-banner').style.backgroundPosition = 'center';
+            document.getElementById('modal-logo').textContent = r.name.substring(0,2).toUpperCase();
+            document.getElementById('modal-tagline').textContent = r.tagline;
+            document.getElementById('modal-cuisines').textContent = r.cuisines.join(' · ');
+            document.getElementById('modal-address').textContent = r.address;
+            document.getElementById('modal-hours').textContent = r.hours;
+            document.getElementById('modal-response').textContent = r.responseTime;
+            document.getElementById('modal-delivery').textContent = `${r.deliveryFee} · ${r.deliveryTime}`;
+            
+            const waText = encodeURIComponent(`Hi, I'd like to order from ${r.name}`);
+            document.getElementById('modal-whatsapp-btn').href = `https://wa.me/${r.whatsapp}?text=${waText}`;
+
+            // Populate Menu
+            const menuContainer = document.getElementById('modal-menu-container');
+            const categories =[...new Set(r.menu.map(m => m.category))];
+            menuContainer.innerHTML = categories.map(cat => {
+                const items = r.menu.filter(m => m.category === cat);
+                return `
+                    <div class="menu-category">
+                        <h3 class="card-title">${cat}</h3>
+                        <div class="menu-grid">
+                            ${items.map(item => `
+                                <div class="menu-item ${!item.available ? 'sold-out' : ''}">
+                                    <div>
+                                        <div class="menu-item-header">
+                                            <span class="menu-item-name">${item.name}</span>
+                                            ${!item.available ? `<span class="badge-soldout">Sold Out</span>` : ''}
+                                        </div>
+                                        <div class="menu-item-desc">${item.desc}</div>
+                                    </div>
+                                    <div class="menu-item-footer">
+                                        <span class="price-text">${formatPrice(item.price)}</span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Populate Reviews
+            document.getElementById('modal-rating-large').textContent = r.rating;
+            document.getElementById('modal-rating-stars').innerHTML = getStarsHTML(r.rating);
+            document.getElementById('modal-review-count').textContent = `${r.reviewCount} reviews`;
+            
+            // Mock breakdown based on rating
+            const p5 = r.rating >= 4.5 ? 75 : 40;
+            const p4 = r.rating >= 4.5 ? 15 : 30;
+            const p3 = r.rating >= 4.5 ? 5 : 15;
+            const p2 = r.rating >= 4.5 ? 3 : 10;
+            const p1 = r.rating >= 4.5 ? 2 : 5;
+            
+            document.getElementById('modal-rating-bars').innerHTML =[
+                {s: 5, p: p5}, {s: 4, p: p4}, {s: 3, p: p3}, {s: 2, p: p2}, {s: 1, p: p1}
+            ].map(b => `
+                <div class="rating-bar-row">
+                    <span>${b.s}★</span>
+                    <div class="bar-bg"><div class="bar-fill" style="width: ${b.p}%"></div></div>
+                    <span>${b.p}%</span>
+                </div>
+            `).join('');
+
+            document.getElementById('modal-dish-ratings').innerHTML = r.dishRatings.map(dr => `
+                <div class="dish-rating-pill">
+                    ${dr.dish} <span style="color: var(--warning)">★</span> ${dr.rating}
+                </div>
+            `).join('');
+
+            renderReviewsList(r.reviews);
+
+            // Populate Staff
+            document.getElementById('modal-staff-grid').innerHTML = r.staff.map(s => `
+                <div class="staff-card">
+                    <div class="staff-avatar">${s.initials}</div>
+                    <div class="card-title">${s.name}</div>
+                    <div class="staff-role">${s.role}</div>
+                    <div class="staff-exp">${s.experience} experience</div>
+                </div>
+            `).join('');
+
+            // Switch to default tab
+            switchTab(defaultTab);
+
+            // Show Modal
+            modal.classList.add('active');
+            document.body.classList.add('modal-open');
+        }
+
+        reviewForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const rating = parseInt(reviewForm.querySelector('input[name="rating"]:checked').value);
+            const dish = document.getElementById('review-dish').value;
+            const comment = document.getElementById('review-comment').value;
+
+            const newReview = {
+                reviewer: "Guest User",
+                date: "Just now",
+                rating: rating,
+                dish: dish,
+                comment: comment
+            };
+
+            const r = restaurants.find(res => res.id === currentRestaurantId);
+            r.reviews.push(newReview);
+            r.reviewCount++;
+            
+            // Update UI
+            renderReviewsList(r.reviews);
+            document.getElementById('modal-review-count').textContent = `${r.reviewCount} reviews`;
+            
+            // Reset Form
+            reviewForm.reset();
+            alert('Thank you for your review!');
+        });
+
+        function closeModal() {
+            modal.classList.remove('active');
+            document.body.classList.remove('modal-open');
+            currentRestaurantId = null;
+        }
+
+        function switchTab(tabId) {
+            tabBtns.forEach(btn => {
+                if (btn.dataset.tab === tabId) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+            tabPanes.forEach(pane => {
+                if (pane.id === `pane-${tabId}`) pane.classList.add('active');
+                else pane.classList.remove('active');
+            });
+        }
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => switchTab(e.target.dataset.tab));
+        });
+
+        modalClose.addEventListener('click', closeModal);
+        modalBackdrop.addEventListener('click', closeModal);
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('active')) closeModal();
+        });
+
+        // --- INIT ---
+        renderTrending();
+        renderRestaurants(restaurants);
+
+    </script>
+</body>
+</html>
