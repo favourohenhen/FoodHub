@@ -40,7 +40,6 @@ _Note: Even though a `package.json` is included, there are currently no Node.js 
 
 ## 🔮 Future Enhancements
 
-- **Extract Assets**: Separate the inline CSS and JavaScript into their own `.css` and `.js` files for better maintainability.
 - **Backend Integration**: Replace the hardcoded `restaurants` array with a dynamic REST or GraphQL API fetch.
 - **User Authentication**: Implement login and signup functionality for users to save their favorite restaurants and past orders.
 - **Shopping Cart**: Build an on-site cart system before redirecting to WhatsApp.
