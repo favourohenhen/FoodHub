@@ -36,7 +36,7 @@ Since this project relies entirely on client-side vanilla technologies, there is
 1. **Clone or download the repository** to your local machine.
 2. **Open `index.html`** in any modern web browser (Chrome, Firefox, Safari, Edge).
 
-*Note: Even though a `package.json` is included, there are currently no Node.js dependencies or build scripts required to run the frontend application.*
+_Note: Even though a `package.json` is included, there are currently no Node.js dependencies or build scripts required to run the frontend application._
 
 ## 🔮 Future Enhancements
 
