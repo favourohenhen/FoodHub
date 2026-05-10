@@ -16,7 +16,7 @@ const restaurants = [
         whatsapp: "2348012345678",
         hours: "Mon–Sat: 8am–10pm, Sun: 10am–8pm",
         image:
-            "https://images.unsplash.com/photo-1664992960082-0ea299a9c53e?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+            "https://images.unsplash.com/photo-1664992960082-0ea299a9c53e?w=800&q=80",
         gradient: "linear-gradient(135deg, #e85d26 0%, #ff9a3c 100%)",
         menu: [
             {
@@ -108,7 +108,7 @@ const restaurants = [
         whatsapp: "2348023456789",
         hours: "Mon–Sun: 4pm–12am",
         image:
-            "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=800&h=400&q=80",
+            "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80",
         gradient: "linear-gradient(135deg, #8b0000 0%, #e85d26 100%)",
         menu: [
             {
@@ -191,7 +191,7 @@ const restaurants = [
         whatsapp: "2348034567890",
         hours: "Tue–Sun: 11am–9pm",
         image:
-            "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&h=400&q=80",
+            "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80",
         gradient: "linear-gradient(135deg, #1a1a2e 0%, #4a4a6a 100%)",
         menu: [
             {
@@ -254,7 +254,7 @@ const restaurants = [
         whatsapp: "2348045678901",
         hours: "Mon–Sun: 10am–11pm",
         image:
-            "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&h=400&q=80",
+            "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800&q=80",
         gradient: "linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)",
         menu: [
             {
@@ -317,7 +317,7 @@ const restaurants = [
         whatsapp: "2348056789012",
         hours: "Mon–Sat: 7am–7pm",
         image:
-            "https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=800&h=400&q=80",
+            "https://images.unsplash.com/photo-1551024601-bec78aea704b?w=800&q=80",
         gradient: "linear-gradient(135deg, #ec4899 0%, #f472b6 100%)",
         menu: [
             {
@@ -380,7 +380,7 @@ const restaurants = [
         whatsapp: "2348067890123",
         hours: "Mon–Sun: 12pm–8pm",
         image:
-            "https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?auto=format&fit=crop&w=800&h=400&q=80",
+            "https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=800&q=80",
         gradient: "linear-gradient(135deg, #4a4a4a 0%, #777777 100%)",
         menu: [
             {
@@ -436,42 +436,42 @@ const trendingDishes = [
         restaurant: "Mama Cass Kitchen",
         price: "₦2,500",
         image:
-            "https://images.unsplash.com/photo-1664992960082-0ea299a9c53e?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+            "https://images.unsplash.com/photo-1664992960082-0ea299a9c53e?w=800&q=80",
     },
     {
         name: "Beef Suya Portion",
         restaurant: "Suya Spot Express",
         price: "₦2,000",
         image:
-            "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=400&h=400&q=80",
-    },
-    /*{
-      name: "Amala + Ewedu",
-      restaurant: "Iya Basira Amala",
-      price: "₦2,500",
-      image:
-        "https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?auto=format&fit=crop&w=400&h=400&q=80",
+            "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80",
     },
     {
-      name: "Classic Smash Burger",
-      restaurant: "Burger Boyz",
-      price: "₦4,000",
-      image:
-        "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=400&h=400&q=80",
+        name: "Amala + Ewedu",
+        restaurant: "Iya Basira Amala",
+        price: "₦2,500",
+        image:
+            "https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=800&q=80",
+    },
+   /* {
+        name: "Classic Smash Burger",
+        restaurant: "Burger Boyz",
+        price: "₦4,000",
+        image:
+            "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800&q=80",
     },
     {
-      name: "Red Velvet Slice",
-      restaurant: "Sweet Treats Cafe",
-      price: "₦2,500",
-      image:
-        "https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=400&h=400&q=80",
+        name: "Red Velvet Slice",
+        restaurant: "Sweet Treats Cafe",
+        price: "₦2,500",
+        image:
+            "https://images.unsplash.com/photo-1551024601-bec78aea704b?w=800&q=80",
     },
     {
-      name: "Special Fried Rice",
-      restaurant: "Wok & Roll",
-      price: "₦4,500",
-      image:
-        "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=400&h=400&q=80",
+        name: "Special Fried Rice",
+        restaurant: "Wok & Roll",
+        price: "₦4,500",
+        image:
+            "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80",
     },*/
 ];
 

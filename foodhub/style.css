@@ -365,22 +365,28 @@ button {
 }
 
 .hero-image-wrapper {
-  display: none;
+  display: block;
   position: relative;
+  margin-top: 20px;
 }
 @media (min-width: 1024px) {
   .hero-image-wrapper {
-    display: block;
+    margin-top: 0;
   }
 }
 
 .hero-main-img {
   width: 100%;
-  height: 400px;
+  height: 300px;
   object-fit: cover;
   border-radius: 20px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
   border: 4px solid rgba(255, 255, 255, 0.1);
+}
+@media (min-width: 1024px) {
+  .hero-main-img {
+    height: 400px;
+  }
 }
 
 .hero-floating-card {
