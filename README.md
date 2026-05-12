@@ -1,4 +1,4 @@
-# FoodHub — Restaurant Discovery Marketplace
+# ChowTown— Restaurant Discovery Marketplace
 
 FoodHub is a modern, responsive front-end web application that allows users to discover local restaurants, browse menus, read reviews, and place orders directly via WhatsApp. It is built completely with vanilla web technologies, ensuring fast load times and a lightweight footprint.
 
